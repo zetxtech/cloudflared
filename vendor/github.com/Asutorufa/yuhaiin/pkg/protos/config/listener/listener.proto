@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+package yuhaiin.listener;
+
+option go_package = "github.com/Asutorufa/yuhaiin/pkg/protos/config/listener";
+
+message protocol {
+  string name = 1 [ json_name = "name" ];
+  bool enabled = 2 [ json_name = "enabled" ];
+  oneof protocol {
+    http http = 3 [ json_name = "http" ];
+    socks5 socks5 = 4 [ json_name = "socks5" ];
+    redir redir = 5 [ json_name = "redir" ];
+    tun tun = 6 [ json_name = "tun" ];
+    yuubinsya yuubinsya = 7 [ json_name = "yuubinsya" ];
+    mixed mix = 8 [ json_name = "mixed" ];
+    socks4a socks4a = 9 [ json_name = "socks4a" ];
+    tproxy tproxy = 10 [ json_name = "tproxy" ];
+  }
+}
+
+message inbound {
+  string name = 13 [ json_name = "name" ];
+  bool enabled = 14 [ json_name = "enabled" ];
+  bool IPv6 = 17 [ json_name = "IPv6" ];
+
+  oneof network {
+    empty empty = 21 [ json_name = "empty" ];
+    tcpudp tcpudp = 15 [ json_name = "tcpudp" ];
+    quic2 quic = 16 [ json_name = "quic" ];
+  }
+
+  repeated transport transport = 2 [ json_name = "transport" ];
+
+  oneof protocol {
+    http http = 3 [ json_name = "http" ];
+    socks5 socks5 = 4 [ json_name = "socks5" ];
+    yuubinsya yuubinsya = 7 [ json_name = "yuubinsya" ];
+    mixed mix = 8 [ json_name = "mixed" ];
+    socks4a socks4a = 9 [ json_name = "socks4a" ];
+    tproxy tproxy = 20 [ json_name = "tproxy" ];
+    redir redir = 18 [ json_name = "redir" ];
+    tun tun = 19 [ json_name = "tun" ];
+  }
+}
+
+message transport {
+  oneof transport {
+    normal normal = 12 [ json_name = "normal" ];
+    tls tls = 1 [ json_name = "tls" ];
+    mux mux = 2 [ json_name = "mux" ];
+    http2 http2 = 5 [ json_name = "http2" ];
+    websocket websocket = 6 [ json_name = "websocket" ];
+    grpc grpc = 11 [ json_name = "grpc" ];
+    reality reality = 10 [ json_name = "reality" ];
+  }
+}
+
+message empty {}
+
+message mux {}
+
+message tcpudp { string host = 1 [ json_name = "host" ]; }
+
+message quic2 {
+  string host = 1 [ json_name = "host" ];
+  tls_config tls = 3 [ json_name = "tls" ];
+}
+
+message inbound_config {
+  bool hijack_dns = 2 [ json_name = "hijack_dns" ];
+  bool hijack_dns_fakeip = 3 [ json_name = "hijack_dns_fakeip" ];
+  map<string, protocol> servers = 5
+      [ json_name = "servers", deprecated = true ];
+  map<string, inbound> inbounds = 1 [ json_name = "inbounds" ];
+}
+
+message http {
+  string host = 1 [ json_name = "host", deprecated = true ];
+  string username = 3 [ json_name = "username" ];
+  string password = 4 [ json_name = "password" ];
+}
+
+message socks5 {
+  string host = 1 [ json_name = "host", deprecated = true ];
+  string username = 3 [ json_name = "username" ];
+  string password = 4 [ json_name = "password" ];
+  bool udp = 5 [ json_name = "udp" ];
+}
+
+message socks4a {
+  string host = 1 [ json_name = "host", deprecated = true ];
+  string username = 2 [ json_name = "username" ];
+}
+
+message mixed {
+  string host = 1 [ json_name = "host", deprecated = true ];
+  string username = 3 [ json_name = "username" ];
+  string password = 4 [ json_name = "password" ];
+}
+
+message redir { string host = 1 [ json_name = "host" ]; }
+
+message tproxy {
+  string host = 1 [ json_name = "host" ];
+  bool dns_hijacking = 2 [ json_name = "dns_hijacking" ];
+  bool force_fakeip = 3 [ json_name = "force_fakeip" ];
+}
+
+message tun {
+  // name of the tun device
+  // eg: tun://tun0, fd://123
+  string name = 1 [ json_name = "name" ];
+  int32 mtu = 2 [ json_name = "mtu" ];
+  string gateway = 3 [ json_name = "gateway" ];
+  bool dns_hijacking = 4 [ json_name = "dns_hijacking" ];
+  bool force_fakeip = 9 [ json_name = "force_fakeip" ];
+  bool skip_multicast = 6 [ json_name = "skip_multicast" ];
+  enum endpoint_driver {
+    fdbased = 0;
+    channel = 1;
+    system_gvisor = 2;
+  }
+  endpoint_driver driver = 7 [ json_name = "driver" ];
+  string portal = 8 [ json_name = "portal" ];
+}
+
+message yuubinsya {
+  string host = 1 [ json_name = "host", deprecated = true ];
+  string password = 2 [ json_name = "password" ];
+  bool force_disable_encrypt = 8 [ json_name = "force_disable_encrypt" ];
+  bool mux = 11 [ json_name = "mux" ];
+  message protocol_normal {};
+  oneof protocol {
+    normal normal = 3 [ json_name = "normal", deprecated = true ];
+    tls tls = 4 [ json_name = "tls", deprecated = true ];
+    quic quic = 5 [ json_name = "quic", deprecated = true ];
+    websocket websocket = 6 [ json_name = "websocket", deprecated = true ];
+    grpc grpc = 7 [ json_name = "grpc", deprecated = true ];
+    http2 http2 = 9 [ json_name = "http2", deprecated = true ];
+    reality reality = 10 [ json_name = "reality", deprecated = true ];
+  }
+}
+
+message normal {};
+message websocket {
+  tls_config tls = 1 [ json_name = "tls", deprecated = true ];
+};
+message quic { tls_config tls = 1 [ json_name = "tls" ]; };
+message tls { tls_config tls = 1 [ json_name = "tls" ]; };
+message grpc { tls_config tls = 1 [ json_name = "tls", deprecated = true ]; };
+message http2 { tls_config tls = 1 [ json_name = "tls", deprecated = true ]; };
+message reality {
+  repeated string short_id = 1 [ json_name = "short_id" ];
+  repeated string server_name = 2 [ json_name = "server_name" ];
+  string dest = 3 [ json_name = "dest" ];
+  string private_key = 4 [ json_name = "private_key" ];
+  bool debug = 5 [ json_name = "debug" ];
+}
+
+message tls_config {
+  repeated certificate certificates = 1 [ json_name = "certificates" ];
+  repeated string next_protos = 3 [ json_name = "next_protos" ];
+  map<string, certificate> server_name_certificate = 4
+      [ json_name = "server_name_certificate" ];
+}
+
+message certificate {
+  bytes cert = 1 [ json_name = "cert" ];
+  bytes key = 2 [ json_name = "key" ];
+
+  string cert_file_path = 3 [ json_name = "cert_file_path" ];
+  string key_file_path = 4 [ json_name = "key_file_path" ];
+}

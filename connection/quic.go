@@ -25,6 +25,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/cloudflare/cloudflared/datagramsession"
+	"github.com/cloudflare/cloudflared/edgediscovery"
 	"github.com/cloudflare/cloudflared/ingress"
 	"github.com/cloudflare/cloudflared/management"
 	"github.com/cloudflare/cloudflared/packet"
@@ -83,7 +84,15 @@ func NewQUICConnection(
 	packetRouterConfig *ingress.GlobalRouterConfig,
 	udpUnregisterTimeout time.Duration,
 ) (*QUICConnection, error) {
-	udpConn, err := createUDPConnForConnIndex(connIndex, localAddr, logger)
+	var udpConn net.PacketConn
+	var err error
+
+	proxyUrl, ok := edgediscovery.FromEnvironmentUsing()
+	if ok {
+		udpConn, err = createSocks5UDPConnForConnIndex(proxyUrl, edgeAddr)
+	} else {
+		udpConn, err = createUDPConnForConnIndex(connIndex, localAddr, logger)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -662,7 +671,7 @@ func createUDPConnForConnIndex(connIndex uint8, localIP net.IP, logger *zerolog.
 
 type wrapCloseableConnQuicConnection struct {
 	quic.Connection
-	udpConn *net.UDPConn
+	udpConn net.PacketConn
 }
 
 func (w *wrapCloseableConnQuicConnection) CloseWithError(errorCode quic.ApplicationErrorCode, reason string) error {

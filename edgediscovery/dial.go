@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"golang.org/x/net/proxy"
 )
 
 // DialEdgeWithH2Mux makes a TLS connection to a Cloudflare edge node
@@ -18,25 +17,22 @@ func DialEdge(
 	edgeTCPAddr *net.TCPAddr,
 	localIP net.IP,
 ) (net.Conn, error) {
+	// Inherit from parent context so we can cancel (Ctrl-C) while dialing
+	dialCtx, dialCancel := context.WithTimeout(ctx, timeout)
+	defer dialCancel()
+
 	dialer := net.Dialer{}
 	if localIP != nil {
 		dialer.LocalAddr = &net.TCPAddr{IP: localIP, Port: 0}
 	}
-	proxyDialer := proxy.FromEnvironmentUsing(&dialer)
-
 	var edgeConn net.Conn
 	var err error
 
-	ctxDialer, ok := proxyDialer.(interface {
-		DialContext(context.Context, string, string) (net.Conn, error)
-	})
+	proxyUrl, ok := FromEnvironmentUsing()
 	if ok {
-		// Inherit from parent context so we can cancel (Ctrl-C) while dialing
-		dialCtx, dialCancel := context.WithTimeout(ctx, timeout)
-		defer dialCancel()
-		edgeConn, err = ctxDialer.DialContext(dialCtx, "tcp", edgeTCPAddr.String())
+		edgeConn, err = Dial(dialCtx, proxyUrl, edgeTCPAddr)
 	} else {
-		edgeConn, err = proxyDialer.Dial("tcp", edgeTCPAddr.String())
+		edgeConn, err = dialer.DialContext(dialCtx, "tcp", edgeTCPAddr.String())
 	}
 	if err != nil {
 		return nil, newDialError(err, "DialContext error")

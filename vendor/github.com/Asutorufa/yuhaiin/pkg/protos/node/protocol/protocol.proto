@@ -1,0 +1,158 @@
+syntax = "proto3";
+
+package yuhaiin.protocol;
+
+option go_package = "github.com/Asutorufa/yuhaiin/pkg/protos/node/protocol";
+
+message protocol {
+  oneof protocol {
+    shadowsocks shadowsocks = 1 [ json_name = "shadowsocks" ];
+    shadowsocksr shadowsocksr = 2 [ json_name = "shadowsocksr" ];
+    vmess vmess = 3 [ json_name = "vmess" ];
+    websocket websocket = 4 [ json_name = "websocket" ];
+    quic quic = 5 [ json_name = "quic" ];
+    obfs_http obfs_http = 6 [ json_name = "obfs_http" ];
+    trojan trojan = 7 [ json_name = "trojan" ];
+    simple simple = 8 [ json_name = "simple" ];
+    none none = 9 [ json_name = "none" ];
+    socks5 socks5 = 10 [ json_name = "socks5" ];
+    http http = 11 [ json_name = "http" ];
+    direct direct = 12 [ json_name = "direct" ];
+    reject reject = 13 [ json_name = "reject" ];
+    yuubinsya yuubinsya = 14 [ json_name = "yuubinsya" ];
+    grpc grpc = 15 [ json_name = "grpc" ];
+    http2 http2 = 16 [ json_name = "http2" ];
+    reality reality = 17 [ json_name = "reality" ];
+    tls_config tls = 18 [ json_name = "tls" ];
+    wireguard wireguard = 19 [ json_name = "wireguard" ];
+    mux mux = 20 [ json_name = "mux" ];
+    drop drop = 21 [ json_name = "drop" ];
+  }
+}
+
+message socks5 {
+  // eg: 127.0.0.1
+  string hostname = 3 [ json_name = "hostname" ];
+  string user = 1 [ json_name = "user" ];
+  string password = 2 [ json_name = "password" ];
+  // TODO: add override hostname options
+}
+
+message http {
+  string user = 1 [ json_name = "user" ];
+  string password = 2 [ json_name = "password" ];
+}
+
+message shadowsocks {
+  string method = 1 [ json_name = "method" ];
+  string password = 2 [ json_name = "password" ];
+}
+
+message shadowsocksr {
+  string server = 1 [ json_name = "server" ];
+  string port = 2 [ json_name = "port" ];
+  string method = 3 [ json_name = "method" ];
+  string password = 4 [ json_name = "password" ];
+  string obfs = 5 [ json_name = "obfs" ];
+  string obfsparam = 6 [ json_name = "obfsparam" ];
+  string protocol = 7 [ json_name = "protocol" ];
+  string protoparam = 8 [ json_name = "protoparam" ];
+}
+
+message http2 { int32 concurrency = 1 [ json_name = "concurrency" ]; }
+
+message vmess {
+  // uuid
+  string uuid = 1 [ json_name = "id" ];
+  // alter id
+  string alter_id = 2 [ json_name = "aid" ];
+  string security = 3 [ json_name = "security" ];
+}
+
+message trojan {
+  string password = 1 [ json_name = "password" ];
+  string peer = 2 [ json_name = "peer" ];
+}
+
+message yuubinsya {
+  string password = 1 [ json_name = "password" ];
+  bool encrypted = 2 [ json_name = "encrypted" ];
+  bool udp_over_stream = 3 [ json_name = "udp_over_stream" ];
+}
+
+message websocket {
+  string host = 1 [ json_name = "host" ];
+  string path = 2 [ json_name = "path" ];
+  bool tls_enabled = 4 [ json_name = "tls_enabled", deprecated = true ];
+}
+
+message grpc { tls_config tls = 1 [ json_name = "tls" ]; }
+
+message quic {
+  string host = 2 [ json_name = "host" ];
+  tls_config tls = 1 [ json_name = "tls" ];
+}
+
+message reality {
+  string server_name = 1 [ json_name = "server_name" ];
+  string public_key = 2 [ json_name = "public_key" ];
+  string short_id = 3 [ json_name = "short_id" ];
+  bool debug = 4 [ json_name = "debug" ];
+}
+
+message obfs_http {
+  string host = 1 [ json_name = "host" ];
+  string port = 2 [ json_name = "port" ];
+}
+
+message none {}
+
+message simple {
+  string host = 1 [ json_name = "host" ];
+  int32 port = 2 [ json_name = "port" ];
+  uint64 timeout = 6 [ json_name = "timeout" ];
+  repeated host alternate_host = 5 [ json_name = "alternate_host" ];
+  // udp will write to every packet target instead of only write to host:port
+  // bool packet_conn_direct = 3 [ json_name = "packet_conn_direct" ];
+  tls_config tls = 4 [ json_name = "tls", deprecated = true ];
+}
+
+message tls_config {
+  bool enable = 1 [ json_name = "enable" ];
+  repeated string server_names = 6 [ json_name = "servernames" ];
+  repeated bytes ca_cert = 3 [ json_name = "ca_cert" ];
+  bool insecure_skip_verify = 4 [ json_name = "insecure_skip_verify" ];
+  // next_protos ALPN Next Protocol
+  // eg: h2, http/1.1
+  repeated string next_protos = 5 [ json_name = "next_protos" ];
+}
+
+message direct {}
+
+message reject {}
+
+message drop {}
+
+message host {
+  string host = 1 [ json_name = "host" ];
+  int32 port = 2 [ json_name = "port" ];
+}
+
+message wireguard_peer_config {
+  string public_key = 1;
+  string pre_shared_key = 2;
+  string endpoint = 3;
+  int32 keep_alive = 4;
+  repeated string allowed_ips = 5;
+}
+
+message wireguard {
+  string secret_key = 1;
+  repeated string endpoint = 2;
+  repeated wireguard_peer_config peers = 3;
+  int32 mtu = 4;
+  int32 num_workers = 5;
+  bytes reserved = 6;
+}
+
+message mux { int32 concurrency = 1 [ json_name = "concurrency" ]; }
